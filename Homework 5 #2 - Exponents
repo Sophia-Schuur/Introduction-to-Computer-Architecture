@@ -1,0 +1,104 @@
+#Sophia Schuur
+#Define the function ?(k), with k ? 2, as
+#22 + 42 + 62 + … + m2
+#Where m is the largest even number that is ? k. 
+#Please implement the function in MIPS and make sure your implementation indeed works on the simulator, by printing the value ?(15) to the terminal.
+
+
+
+
+.data
+inputstring: .asciiz "Enter k: "
+outputstring: .asciiz "\nAnswer: "
+
+.text
+.globl main
+main:
+
+li $v0, 4
+la $a0, inputstring
+syscall
+#prints inputstring to screen
+
+li $v0, 5
+syscall
+#reads k from user
+
+move $a0, $v0
+#a0 now holds k inputted by user
+
+jal function
+
+move $a1, $v0
+#save result of function to a1 so we can print it
+
+li $v0, 4
+la $a0, outputstring
+syscall
+#print outputstring to screen
+
+li $v0, 1
+move $a0, $a1
+syscall
+#print answer to screen
+
+
+li $v0,10 
+syscall
+#end program
+
+function:
+#a0 -> k
+#t0 -> holds 2 to decide if k is even or odd
+#t1 -> holds copy of k to decide if k is even or odd
+
+li $t0, 2
+#hi stores remainder. if remainder is 0 it is even. if it is 1 it is odd.
+#for example if k = 5, m = 4
+#divide answer by 2.
+move $t1, $a0
+div $t1, $t0
+mfhi $t0
+#t0 now holds remainder. 0 = even, 1 = odd
+
+beq $t0, 1, ODD
+j CONTINUE
+ODD:
+
+addi $a0, $a0, -1
+#since k was odd, we subtract 1 from it to get the largest even number that is less than k
+#this gives us m
+j CONTINUE
+
+CONTINUE: 
+
+#a0 -> k, corrected if odd (i guess that makes it m huh)
+#t0 -> answer
+#t1 -> holds $t2^2
+#t2 -> decrementer. when this reaches less than 2, break out of the loop.
+	#initially set to a0.
+li $t0, 0
+move $t1, $a0
+move $t2, $a0
+#now t1 holds initial k entered by user
+LOOP:
+
+blt $t2, 2, EXITLOOP
+#when $t2 is less than 2, exit the loop
+
+move $t1, $t2
+mul $t1, $t1, $t1
+#t1 now holds $t2^2
+
+add $t0, $t0, $t1
+
+subi $t2, $t2, 2
+#decrement counter by 2
+
+j LOOP
+EXITLOOP:
+
+move $v0, $t0
+
+jr $ra
+

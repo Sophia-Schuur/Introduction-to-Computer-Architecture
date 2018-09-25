@@ -1,0 +1,69 @@
+.text
+.globl  main
+#Sophia Schuur
+#CptS 260
+#Translate the following C code:
+
+#void main(){
+#int x=12;
+#int y=simpleEx(x,x-5);
+#y=y+simpleEx(14,x);
+#}
+#int simpleEx(int x, int y){
+#int z=7;
+#return x+2y-z;
+#}
+
+
+
+main:
+
+#argument 1  -> a0
+#argument 2 -> a1
+#t0 -> x
+#t1 -> y
+
+
+li $t0, 12	 #12 is x
+
+#simpleEx(a0, a1) a0 = x; a1 = x - 5
+##########################
+move $a0, $t0
+sub $a1, $a0, 5 #a1 holds a0 -> 5
+jal simpleEx
+##########################
+#v0 now holds return value of simpleEx
+move $t1, $v0
+
+#simpleEx(a0, a1) a0 = 14; a1 = x
+#####################
+li $a0, 14
+move $a1, $t0
+jal simpleEx
+#####################
+#v0 now holds return value of simpleEx
+
+add $t1, $t1, $v0
+
+li $v0,10 #end program
+syscall
+
+simpleEx:
+
+#save t0
+addi $sp, $sp, -4
+sw $t0, 0($sp)
+
+li $t0, 7
+
+########### arithmetic
+mul $v0, $a1, 2
+add $v0, $v0, $a0
+sub $v0, $v0, $t0
+###########
+
+#save $t0
+lw $t0, 0($sp)
+addi $sp, $sp, 4
+
+jr $ra

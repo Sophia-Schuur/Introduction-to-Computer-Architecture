@@ -1,0 +1,151 @@
+#Sophia Schuur
+#Mips program to handle polling on the keyboard and output
+
+
+
+.text
+main:
+li $s0, 0xffff0000
+#reciever
+li $s1, 0xffff0008
+#transmitter
+
+
+#s0 -> reciever address (read)
+#s1 -> transmitter address (write)
+#a0 -> first digit
+#a1 -> plus sign
+#a2 -> second digit
+#a3 -> equal sign
+
+#read the first digit
+ReadNum1:
+lw $v0, 0($s0)
+andi $v0, $v0, 0x01
+beq $v0, $zero, ReadNum1
+lw $a0, 4($s0)
+#save first digit in a0
+
+#Display first digit.
+WriteNum1:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteNum1
+sw $a0, 4($s1)
+##################################
+
+#Read plus sign (second character)
+ReadPlus:
+lw $v0, 0($s0)
+andi $v0, $v0, 0x01
+beq $v0, $zero, ReadPlus
+lw $a1, 4($s0)
+#Store + in a1.
+
+
+#Display + character
+WritePlus:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WritePlus
+sw $a1, 4($s1)
+##################################
+
+#Read second digit (Third character)
+ReadNum2:
+lw $v0, 0($s0)
+andi $v0, $v0, 0x01
+beq $v0, $zero, ReadNum2
+lw $a2, 4($s0)
+#Save in a2.
+
+#Display second digit
+WriteNum2:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteNum2
+sw $a2, 4($s1)
+
+##################################
+
+#Read equal sign (Fourth character)
+ReadEqualSign:
+lw $v0, 0($s0)
+andi $v0, $v0, 0x01
+beq $v0, $zero, ReadEqualSign
+lw $a3, 4($s0)
+#Save in a3.
+
+#Display equal sign
+WriteEqualSign:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteEqualSign
+sw $a3, 4($s1)
+
+##################################
+
+andi $a0,$a0,0x0F
+andi $a2,$a2,0x0F 
+#Convert ascii digits to integers 
+
+add $t0, $a0, $a2
+#add the integers and save them into t0. this is our sum
+
+bge $t0, 10, DoubleDigit
+#if its a double digit, go to the doubleDigit branch
+j NotDouble
+#if not, skip DoubleDigit
+
+DoubleDigit:
+
+WriteOne:
+
+#Display a 1
+li $t1, 49
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteOne
+sw $t1, 4($s1)
+#t1 just held 1. can be used again
+
+move $t1, $t0
+li $t2, 10
+#t1 now holds copy of t0
+
+#mod t1 by 10 to get second digit
+div $t1, $t2
+mfhi $t3
+addi $t3, $t3, 48
+#add 48 to get the ascii value of the second digit
+
+#display second digit to screen
+WriteMod:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteMod
+sw $t3, 4($s1)
+
+j exit
+NotDouble:
+
+lb $t1, asciiZero
+addu $t0, $t0, $t1
+#convert t0 to ascii
+
+#display single digit 
+WriteSum:
+lw $v0, 0($s1)
+andi $v0, $v0, 0x01
+beq $v0, $zero, WriteSum
+sw $t0, 4($s1)
+
+j exit
+exit:
+
+#end program
+li $v0,10 
+syscall
+
+.data
+asciiZero: .byte '0'

@@ -1,0 +1,90 @@
+#Sophia Schuur
+#Recursively perform Fibbonacci on whatever is in a0
+
+.text
+.globl main
+main:
+
+#$a0 -> n
+#a1 -> holds return value of Fibonacci. For printing purposes.
+
+li $a0, 4
+#a0 holds n
+
+jal Fibonacci
+#$vo now holds result 
+
+move $a1, $v0
+#set $a1 to value of $v0 so we can print it to screen
+
+li $v0, 1
+move $a0, $a1
+syscall
+#print out answer
+
+
+li $v0,10 
+syscall
+#end program
+
+################################
+#$a0 -> n inputted by user. 
+#$a1 -> 2*F(n-1)
+ 
+Fibonacci:
+   addi $sp, $sp, -12
+   sw $ra, 0($sp)
+   sw $s0, 4($sp)
+   sw $s1, 8($sp)
+
+   move $s0, $a0
+   #Move the argument to s0 so we don't change n ($a0)
+  
+################################
+   #base cases for n = 0 or 1:
+   li $v0, 1
+   beq $s0, 0, EXIT
+   #If $a0 is 0, return 1 and exit 
+
+   li $v0, 2
+   beq $s0, 1, EXIT
+   #If $a0 is 1 return 2 and exit
+
+################################
+   
+   subi $a0, $s0, 1
+   jal Fibonacci
+   #F(n-1)
+
+   move $s1, $v0
+   #now s1 holds the return value of F(n-1)
+
+   mul $s1, $s1, 2
+   #now s1 holds 2*F(n-1)
+   
+   subi $a0, $s0, 2
+   #now $a0 holds n-2
+
+   jal Fibonacci
+   #now $v0 holds F(n-2)
+
+   mul $v0, $v0, 3
+   #v0 now holds 3*F(n-2)
+
+   add $v0, $s1, $v0
+   #v0 now holds 2*F(n-1) + 3*F(n-2)
+   
+   lw $ra, 0($sp)
+   lw $s0, 4($sp)
+   lw $s1, 8($sp)
+
+   addi $sp, $sp, 12
+   jr $ra
+
+EXIT:
+   lw $ra, 0($sp)
+   lw $s0, 4($sp)
+   lw $s1, 8($sp)
+
+   addi $sp, $sp, 12
+   jr $ra

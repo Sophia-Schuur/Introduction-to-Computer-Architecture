@@ -1,0 +1,115 @@
+#Sophia Schuur
+#Write a MIPS program that can print out the cubic root of 3 up to the precision of 10^3. 
+
+
+
+.text
+.globl main
+main:
+#f0 -> 3.0, the value we want to cube root
+#f2 -> 1.0, for Newton's method calculations. Will eventually hold cube root of 3
+#f4 -> 2.0, for Newton's method calculations
+#f6 -> 3.0, for Newton's method calculations
+#f8 -> xi^2 and 2/xi^2
+#f10 -> 2*xi
+#f12 -> epsilon (0.00001)
+#f14 -> 1000.0
+
+li $s0, 3
+mtc1 $s0, $f0
+cvt.s.w $f0, $f0
+#convert 3 to float, the value we want to cube root
+
+li $s0, 1 
+mtc1 $s0, $f2
+cvt.s.w $f2, $f2
+#convert 1 to float, for Newton's method and the start point of loop
+
+li $s0, 2 
+mtc1 $s0, $f4
+cvt.s.w $f4, $f4
+#convert 2 to float, for Newton's method
+
+li $s0, 3
+mtc1 $s0, $f6
+cvt.s.w $f6, $f6
+#convert 3 to float, for Newton's method
+
+l.s $f12, epsilon 
+#load 0.00001 into $f12. Used for comparing purposes to leave loop  
+
+###############################################################################
+NewtonsMethodLoop:
+#Newtons Method: xi+1 = (2*xi + N/xi^2)/3
+#where in this case, N = 3 (but can be changed by changing f0 above)
+mul.s $f8, $f2, $f2 
+#f8 holds xi^2
+
+mul.s $f10, $f4, $f2 
+#f10 holds 2*xi
+
+div.s $f8, $f0, $f8 
+#f8 now holds N/xi^2
+
+add.s $f8, $f8, $f10 
+#f8 holds f8 + f10 =  N/xi^2 + 2*xi
+
+div.s $f8, $f8, $f6 
+#f8 holds f8 / 3
+#now f8 is xi+1
+
+sub.s $f10, $f8, $f2 
+#calculate xi+1 - xi, store in f10
+#when the absolute value of xi+1 - xi is less than epsilon, break
+
+abs.s $f10, $f10 
+#get the absolute value f10
+
+c.le.s $f10, $f12 
+bc1t endNewtonsMethodLoop 
+#if absolute value of f10 is less than epsilon, break
+
+mov.s $f2, $f8 
+#increment xi+1
+
+j NewtonsMethodLoop
+###############################################################################
+endNewtonsMethodLoop:
+
+li $v0, 4
+la $a0, sentence
+syscall
+#display cube root message to screen
+
+
+################
+#now display cube root to three decimal points
+li $s0, 1000 
+mtc1 $s0, $f14
+cvt.s.w $f14, $f14
+#convert 1000 to double, put in f14
+
+mul.s $f2, $f2, $f14
+#mulitply cube root by 1000
+cvt.w.s $f2, $f2
+#convert float to int
+cvt.s.w $f2, $f2
+#convert int to float 
+div.s $f2, $f2, $f14
+#divide int f2 by 1000
+#now f2 holds cube root of 3 to 10^-3 decimal places
+##############
+
+li $v0, 2
+mov.s $f12, $f2
+syscall
+#display the cuberoot stored in $f2
+
+li $v0, 10
+syscall
+#exit program
+
+.data
+sentence: .asciiz "The cube root of 3 is "
+epsilon: .float 0.00001
+

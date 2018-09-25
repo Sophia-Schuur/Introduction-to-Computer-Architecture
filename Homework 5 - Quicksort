@@ -1,0 +1,194 @@
+#Sophia Schuur
+#Mips Quicksort function
+
+.data
+
+array: .word 10, 2, 17, 9, 6, 4, 8
+comma: .asciiz  ", " 
+
+.text
+.globl  main
+main:
+
+la $s0, array
+move $a0, $s0
+
+li $a1, 0
+li $a2, 6
+
+jal quicksort
+#sorted
+
+li $t0, 0
+li $t1, 5
+PRINTLOOP:
+#print da sorted array
+bgt $t0, $t1, EXITPRINTLOOP
+
+sll $t3, $t0, 2
+add $t3, $s0, $t3
+lw $t4, 0($t3)
+
+move $a0, $t4
+li $v0, 1
+syscall
+
+la $a0, comma
+li $v0, 4
+syscall
+#prints a comma between each element
+
+
+addi $t0, $t0, 1
+j PRINTLOOP
+
+move $a0, $t4
+li $v0, 1
+syscall
+
+
+EXITPRINTLOOP:
+
+sll $t3, $t0, 2
+add $t3, $s0, $t3
+lw $t4, 0($t3)
+#we do not want the comma to print after the last element so heres printing the last element without the comma.
+
+move $a0, $t4
+li $v0, 1
+syscall
+
+li $v0,10 #end program
+syscall
+
+#####################################################################
+#$a0 -> address of array
+#$a1 -> Low
+#$a2 -> High
+#t0 -> pi
+#save $ra, $a0, $a1, $a2
+
+quicksort:
+bge $a1, $a2, EXITQUICKSORT
+
+##save $ra, $a0, $a1
+addi $sp, $sp, -20
+sw $ra, 0($sp)
+sw $a0, 4($sp)
+sw $a1, 8($sp)
+sw $a2, 12($sp)
+###################
+
+
+jal partition
+#set return value of partition, pi, to $t0 so we can grab it later without changing it
+#v0 now holds return
+sw $v0, 16($sp)
+
+#quicksort(a, low, pi - 1)
+move $a2, $v0
+addi $a2, $a2, -1
+jal quicksort
+
+#save $v0 to stack
+
+
+#quicksort(a, pi + 1, high)
+lw $a1, 16($sp)
+addi $a1, $a1, 1
+lw $a2, 12($sp)
+jal quicksort
+
+
+##load $ra, $a0, $a1
+lw $a2, 12($sp)
+lw $a1, 8($sp)
+lw $a0, 4($sp)
+lw $ra, 0($sp)
+addi $sp, $sp, 20
+
+
+EXITQUICKSORT:
+jr $ra
+
+###############################################
+
+#$a0 -> address of array
+#$a1 -> Low
+#$a2 -> High
+#$t0 -> address of pivot/ high -1
+#$t1 -> value of pivot (arr[high])
+#$t2 -> value of i
+#$t3 -> value of j
+#$t4 -> value of A[i]
+#$t5 -> value of A[j]
+#$t6 -> address if A[i]
+#$t7 -> address of A[j]
+
+partition:
+
+mul $t7, $a2, 4
+add $t7, $t7, $a0
+lw $t1, 0($t7) 
+#t1 now holds arr[high]
+
+
+addi $t2, $a1, -1 
+
+move $t3, $a1 
+#j = low
+
+addi $t0, $a2, -1 
+#t0 = high - 1
+
+LOOP1:
+
+bgt $t3, $t0, EXITLOOP
+
+mul $t7, $t3, 4
+add $t7, $t7, $a0
+lw $t5, 0($t7)
+#$t5 is now the value of A[j]
+
+ble $t5, $t1, IF
+j ELSE
+IF:
+addi $t2, $t2, 1
+
+mul $t6, $t2, 4
+add $t6, $t6, $a0
+lw $t4, 0($t6)
+
+sw $t4, 0($t7)
+sw $t5, 0($t6)
+#swap addresses of A[i] and A[j]
+
+ELSE:
+
+addi $t3, $t3, 1
+
+j LOOP1
+
+EXITLOOP:
+#there was some fanaggling with the temp variables here..
+addi $t2, $t2, 1
+
+mul $t7, $a2, 4
+add $t7, $t7, $a0 
+#t7 now holds !ADDRESS! arr[high]
+lw $t1, 0($t7) 
+#t1 now holds arr[hi]
+
+mul $t3, $t2, 4
+add $t3, $t3, $a0 
+#t3 now holds !ADDRESS! arr[i + 1] 
+lw $t4, 0($t3) 
+#t4 now holds value arr[i + 1]
+
+sw $t4, 0($t7)
+sw $t1, 0($t3)
+#swap addresses
+
+move $v0, $t2
+
+jr $ra
